@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Shop</title>
+
+    <!-- Link para a biblioteca Font Awesome (para usar ícones) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #ffffffcc;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fundo preto fixo no topo contendo o carrossel */
+        .topo-preto {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.973);
+            z-index: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Carrossel dentro do fundo preto */
+        .carrossel-container {
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 45px;
+        }
+
+        .carrossel-slide {
+            border-radius: 45px;
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .carrossel-slide img {
+            border-radius: 45px;
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+        }
+
+        .prev, .next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 100;
+        }
+
+        .prev {
+            left: 10px;
+        }
+
+        .next {
+            right: 10px;
+        }
+
+        .indicators {
+            top:85%;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+        }
+
+        .indicator {
+            width: 15px;
+            height: 15px;
+            margin: 0 5px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+
+        .active {
+            background-color: white;
+        }
+
+        /* Vitrine de produtos começa após o fundo preto */
+        .conteudo {
+            margin-top: 10px;
+          
+        }
+
+        #produtos {
+            display: flex;
+            flex-wrap: wrap; /* Permite que os itens se distribuam em várias linhas */
+            justify-content: space-between;
+            gap: 20px; /* Espaçamento entre os produtos */
+            padding: 0 20px;
+        }
+
+        .produto-single {
+            width: 30%; /* 3 produtos por linha */
+            box-sizing: border-box;
+            text-align: center;
+            font: 1.5em arial;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid #000;
+            border-radius: 15px;
+            background-color: #fff;
+            position: relative; /* Necessário para posicionar o botão */
+            height: 380px; /* Altura fixa para manter a caixa no tamanho original */
+            overflow: hidden; /* Impede que a imagem ultrapasse a box */
+        }
+
+        .produto-single:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(3, 3, 226, 0.2);
+        }
+
+        .produto-single img {
+            width: 100%;
+            height: 100%; /* Garantir que a imagem ocupe toda a altura da box */
+            object-fit: cover; /* Ajuste a imagem para cobrir a caixa sem deixar espaços */
+            position: absolute; /* A imagem vai se posicionar dentro da box */
+            top: 0;
+            left: 0;
+        }
+
+        .produto-single p {
+         position: absolute;
+         bottom: -9%;
+         left: 50%;
+         transform: translateX(-50%);
+         font-size: 1.3em;
+         color: rgb(255, 255, 255); /* Cor branca com transparência */
+         font-weight: bold;
+         text-shadow: 2px 2px 6px rgb(0, 0, 0); /* Sombra para dar destaque ao texto */
+         z-index: 2;
+         font: 1.5em arial;
+     }
+
+
+        .produto-single a {
+            z-index: 3;
+            position: absolute;
+            bottom: 0; /* Coloca o botão na parte inferior da box */
+            left: 50%;
+            transform: translateX(-50%);
+            display: block;
+            background-color: #000000;
+            border-radius: 6px;
+            color: rgb(255, 255, 255);
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            font: 1.3em arial;
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+            opacity: 0; /* Inicialmente invisível */
+            transition: opacity 0.3s ease;
+        }
+
+        .produto-single:hover a {
+            opacity: 1; /* Mostra o botão ao passar o mouse */
+        }
+
+        /* Carrinho */
+        #btnCarrinho {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 20;
+        }
+
+        #btnCarrinho i {
+            font-size: 50px;
+        }
+
+        /* Estilo da aba do carrinho */
+        #carrinhoContainer {
+            font: bold;
+            font-size: 25px;
+            position: fixed;
+            top: 0;
+            right: -460px;
+            width: 460px;
+            height: 100%;
+            background-color: #ffffff;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 15;
+        }
+
+        #carrinhoContainer.open {
+            right: 0;
+        }
+
+        #carrinhoContainer h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #btnFecharCarrinho {
+            background-color: #f44336;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
+        #btnFecharCarrinho:hover {
+            background-color: #d32f2f;
+        }
+
+        .item-carrinho {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.item-img {
+    width: 60px; /* Ajuste o tamanho da imagem conforme necessário */
+    height: 60px;
+    object-fit: cover;
+    margin-right: 15px;
+}
+
+.item-info p {
+    margin: 0;
+}
+
+.compra-box {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.itens-compra {
+    display: flex;
+    flex-wrap: wrap;
+}
+        .item-carrinho p {
+            margin: 0;
+            flex: 1;
+        }
+        #btnFinalizarCompra{
+            color: #ffffff;
+            text-decoration: none;
+            font: bold;
+            font-size: 1.1em;
+            background-color: rgb(0, 0, 0);
+            border-radius: 25px;  
+            cursor: pointer;     
+            padding: 13px 20px;  
+            margin-left: 20%; 
+            
+        }
+        /* Estilo do ícone do Hamburger */
+#hamburger {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+    z-index: 100;
+}
+
+/* Estilo do menu lateral */
+#menuConta {
+    position: fixed;
+    top: 0%;
+    left: -3000px;
+    width: 300px;
+    height: 90%; /* Redefine a altura para 90% da tela para garantir que caiba todo o conteúdo */
+    background-color: black;
+    font: 1.2em sans-serif;
+    color: white;
+    padding: 20px;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    overflow-y: auto; /* Habilita a rolagem quando o conteúdo for maior que a altura */
+}
+#menuConta.open {
+    left: 0;
+}
+
+#menuConta h2 {
+    margin-top: 0;
+    text-align: center;
+}
+
+#menuConta ul {
+    list-style: none;
+    padding: 0;
+}
+
+#menuConta ul li {
+    margin: 20px 0;
+    font-size: 18px;
+}
+
+/* Estilo para o botão de Histórico de Compras */
+#btnHistorico {
+    cursor: pointer; /* Indica que é clicável */
+    background-color: #308ef1; /* Cor de fundo */
+    color: white; /* Cor do texto */
+    padding: 10px 20px; /* Espaçamento interno */
+    border-radius: 5px; /* Borda arredondada */
+    font-size: 2em; /* Tamanho da fonte */
+    border: none; /* Remove borda */
+    margin-bottom: 10px; /* Espaçamento abaixo do botão */
+    transition: background-color 0.3s ease; /* Transição suave de cor ao passar o mouse */
+}
+
+#btnHistorico:hover {
+    background-color: #0056b3; /* Cor de fundo quando o mouse passa sobre o botão */
+}
+
+#carrinho p {
+    font-size: 18px;         /* Tamanho da fonte */
+    color: #000000;          /* Cor da fonte (exemplo: tomate) */
+    text-align: center;      /* Centraliza o texto */
+    font-weight: bold;       /* Torna o texto em negrito */
+    padding: 20px;           /* Adiciona um pouco de espaço ao redor do texto */
+    background-color: #f9f9f9; /* Cor de fundo do parágrafo */
+    border: 1px solid #ddd;  /* Borda suave ao redor da mensagem */
+    border-radius: 8px;      /* Bordas arredondadas */
+    margin-top: 20px;        /* Espaço acima da mensagem */
+}
+
+#btnInfoConta {
+    cursor: pointer; /* Indica que é clicável */
+    background-color: #308ef1; /* Cor de fundo */
+    color: white; /* Cor do texto */
+    padding: 10px 20px; /* Espaçamento interno */
+    border-radius: 5px; /* Borda arredondada */
+    font-size: 2em; /* Tamanho da fonte */
+    border: none; /* Remove borda */
+    margin-bottom: 10px; /* Espaçamento abaixo do botão */
+    transition: background-color 0.3s ease; /* Transição suave de cor ao passar o mouse */
+}
+
+#btnInfoConta:hover {
+    background-color: #0056b3; /* Cor ao passar o mouse */
+}
+
+
+/* Estilo dos rótulos (labels) */
+.formulario-login label {
+    font-size: 1.2rem; /* Aumenta o tamanho da fonte */
+    margin-bottom: 8px; /* Espaço entre o rótulo e o campo */
+    align-self: flex-start; /* Alinha o rótulo à esquerda */
+}
+
+/* Estilo dos campos de entrada (inputs) */
+.formulario-login input {
+    width: 90%; /* Campo de entrada ocupa toda a largura disponível */
+    padding: 15px; /* Aumenta o padding para um melhor espaçamento */
+    font-size: 1.1rem; /* Aumenta o tamanho da fonte */
+    margin-bottom: 15px; /* Espaço entre os campos */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Estilo do botão de enviar */
+.formulario-login button {
+    padding: 12px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-bottom: 10px; /* Adiciona espaço abaixo do botão */
+}
+
+/* Estilo do botão de fechar */
+#btnFecharLogin {
+    padding: 12px 15px;
+    background-color: #9e0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+/* Efeito de hover nos botões */
+.formulario-login button:hover{
+    background-color: #005bbd;
+}
+#btnFecharLogin:hover {
+    background-color: #750101;
+}
+
+
+    </style>
+</head>
+<body>
+
+    <!-- Fundo preto fixo no topo contendo o carrossel -->
+    <div class="topo-preto">
+        <div class="carrossel-container">
+            <div class="carrossel-slide">
+                <img src="img carrossel/imagem1.png" alt="Imagem 1">
+                <img src="img carrossel/imagem2.png" alt="Imagem 2">
+                <img src="img carrossel/imagem3.png" alt="Imagem 3">
+                <img src="img carrossel/imagem4.png" alt="Imagem 4">
+            </div>
+            <button class="prev">&#10094;</button>
+            <button class="next">&#10095;</button>
+            <div class="indicators">
+                <div class="indicator"></div>
+                <div class="indicator"></div>
+                <div class="indicator"></div>
+                <div class="indicator"></div>
+            </div>
+        </div>
+
+        <!-- Botão para abrir/fechar a aba do carrinho com ícone -->
+        <button id="btnCarrinho"><i class="fas fa-shopping-cart"></i></button>
+    </div>
+<!-- Ícone de hambúrguer para abrir o menu lateral -->
+<div id="hamburger" onclick="toggleMenu()">☰</div>
+<!-- Menu lateral que abre ao clicar no ícone de hambúrguer -->
+
+<div id="menuConta">
+    <h2>Minha Conta</h2>
+    <ul>
+        <li id="btnHistorico">Histórico de Compras</li>
+        <li id="btnInfoConta">Informações da Conta</li> <!-- Alterado de 'Informações da Conta' para ser um botão com id -->
+    </ul>
+    
+    <!-- Formulário de login oculto inicialmente -->
+    <div id="formularioLogin" class="formulario-login" style="display: none;">
+        <h3>Login</h3>
+        <form id="loginForm">
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" name="senha" required>
+            <button type="submit">Entrar</button>
+            <button type="button" id="btnLogout">Sair</button>
+        </form>
+        <button id="btnFecharLogin">Fechar</button>
+    </div>
+
+    <!-- Contêiner para o histórico de compras -->
+    <div id="historicoCompras" style="display: none;"></div>
+</div>
+
+     <!-- Aba do Carrinho -->
+     <div id="carrinhoContainer">
+        <button id="btnFecharCarrinho">Fechar</button>
+        <h3>Itens</h3>
+        <div id="carrinho"></div>
+        <button id="btnFinalizarCompra">Finalizar Compra</button>
+
+    </div>
+
+    <!-- Vitrine de Produtos -->
+    <div class="conteudo">
+        <h2 style="text-align: center; font: 4em Garamond; font: bold;">Produtos</h2>
+        <div id="produtos"></div>
+    </div>
+    
+    
+    <script>
+       const items = [
+    { id: 1, nome: 'Rações', img: 'imagem4.png', quantidade: 0, preco: 50.00 },
+    { id: 2, nome: 'Roupas', img: 'imagem2.png', quantidade: 0, preco: 30.00 },
+    { id: 3, nome: 'Itens de Banho', img: 'imagem5.png', quantidade: 0, preco: 20.00 },
+    { id: 4, nome: 'Petiscos', img: 'imagem6.png', quantidade: 0, preco: 10.00 },
+    { id: 5, nome: 'Brinquedos', img: 'imagem1.png', quantidade: 0, preco: 25.00 },
+    { id: 6, nome: 'Remédios', img: 'imagem3.png', quantidade: 0, preco: 40.00 },
+];
+
+    
+        let currentSlide = 0;
+    
+        const carrossel = () => {
+            const slides = document.querySelector('.carrossel-slide');
+            const indicators = document.querySelectorAll('.indicator');
+            const totalSlides = slides.children.length;
+    
+            const showSlide = () => {
+                slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+                indicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index === currentSlide);
+                });
+            };
+    
+            const nextSlide = () => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                showSlide();
+            };
+    
+            const prevSlide = () => {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                showSlide();
+            };
+    
+            document.querySelector('.next').addEventListener('click', nextSlide);
+            document.querySelector('.prev').addEventListener('click', prevSlide);
+    
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide();
+                });
+            });
+    
+            setInterval(nextSlide, 3000);
+    
+            showSlide();
+        };
+    
+        const inicializarPetShop = () => {
+    const containerProdutos = document.getElementById('produtos');
+    containerProdutos.innerHTML = '';
+
+    items.forEach((val) => {
+        const produtoHTML = `
+            <div class="produto-single">
+                <img src="${val.img}" alt="${val.nome}" />
+                <p>${val.nome}</p>
+                <a href="#" class="adicionar-carrinho" data-id="${val.id}">
+                    Adicionar ao carrinho por R$ ${val.preco.toFixed(2)} <!-- Inclui o preço no botão -->
+                </a>
+            </div>
+        `;
+        containerProdutos.innerHTML += produtoHTML;
+    });
+
+    // Adiciona o evento de clique no link de "Adicionar ao carrinho" após a criação dos elementos
+    const btnAdicionarCarrinho = document.querySelectorAll('.adicionar-carrinho');
+    btnAdicionarCarrinho.forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const id = btn.getAttribute('data-id');
+            adicionarAoCarrinho(id);
+        });
+    });
+};
+    
+        const adicionarAoCarrinho = (id) => {
+            const item = items.find(item => item.id === parseInt(id));
+            if (item) {
+                item.quantidade++;
+                atualizarCarrinho();  // Atualiza a visualização do carrinho
+            }
+        };
+    
+       const atualizarCarrinho = () => {
+    const containerCarrinho = document.getElementById('carrinho');
+    const btnFinalizarCompra = document.getElementById('btnFinalizarCompra');
+    containerCarrinho.innerHTML = '';
+
+    let total = 0; // Variável para calcular o total do carrinho
+    let carrinhoVazio = true;
+
+    items.forEach((item, index) => {
+        if (item.quantidade > 0) {
+            carrinhoVazio = false;
+            total += item.quantidade * item.preco; // Calcula o total do item
+
+            containerCarrinho.innerHTML += `
+                <div class="item-carrinho">
+                    <img src="${item.img}" alt="${item.nome}" class="item-img">
+                    <div class="item-info">
+                        <p><strong>${item.nome}</strong></p>
+                        <p>Quantidade: ${item.quantidade}</p>
+                        <p>Preço: R$ ${item.preco.toFixed(2)}</p>
+                        <button class="btn-remover" data-index="${index}">Remover</button>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+            // Se o carrinho estiver vazio, exibe a mensagem de carrinho vazio dentro do carrinho
+            if (!carrinhoVazio) {
+        containerCarrinho.innerHTML += `<p><strong>Total: R$ ${total.toFixed(2)}</strong></p>`;
+    } else {
+        containerCarrinho.innerHTML = '<p>Seu carrinho está vazio. Adicione itens para continuar.</p>';
+    }
+    
+            // Desabilita ou habilita o botão de finalizar compra com base no carrinho
+            btnFinalizarCompra.disabled = carrinhoVazio;
+    
+            // Adiciona o evento de clique nos botões de remoção
+            const btnRemover = document.querySelectorAll('.btn-remover');
+            btnRemover.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.target.getAttribute('data-index');
+                    removerDoCarrinho(index);  // Chama a função de remoção passando o índice
+                });
+            });
+        };
+    
+        // Função para remover o item do carrinho
+        const removerDoCarrinho = (index) => {
+            const produto = items[index];
+            if (produto.quantidade > 0) {
+                produto.quantidade--;
+                atualizarCarrinho();
+            }
+        };
+    
+        // Função para abrir e fechar o menu
+        function toggleMenu() {
+            var menu = document.getElementById("menuConta");
+            menu.classList.toggle("open");
+        }
+    
+        // Função para finalizar a compra
+        const finalizarCompra = () => {
+    const itensComprados = items.filter(item => item.quantidade > 0);
+    if (itensComprados.length === 0) {
+        alert('Seu carrinho está vazio!');
+        return;
+    }
+
+    let valorTotal = 0;
+    let mensagemWhatsApp = "Olá, gostaria de finalizar minha compra:\n\n";
+
+    // Adicionando os itens e seus totais à mensagem
+    itensComprados.forEach(item => {
+        const itemTotal = item.preco * item.quantidade;
+        mensagemWhatsApp += `${item.nome} - ${item.quantidade} x R$ ${item.preco.toFixed(2)} = R$ ${itemTotal.toFixed(2)}\n`;
+        valorTotal += itemTotal;
+    });
+
+    // Adicionando o valor total
+    mensagemWhatsApp += `\nTotal: R$ ${valorTotal.toFixed(2)}\n`;
+
+    // Salvar o histórico da compra
+    const historicoCompra = {
+        data: new Date().toLocaleDateString(),
+        itens: itensComprados,
+        valor_total: valorTotal
+    };
+
+    const historicoAtual = JSON.parse(localStorage.getItem('historicoCompras')) || [];
+    historicoAtual.push(historicoCompra);
+    localStorage.setItem('historicoCompras', JSON.stringify(historicoAtual));
+
+    // Limpa o carrinho
+    items.forEach(item => item.quantidade = 0);
+    atualizarCarrinho();
+
+    // Codifica a mensagem para a URL do WhatsApp
+    const mensagemCodificada = encodeURIComponent(mensagemWhatsApp);
+
+    // Redireciona para o WhatsApp com a mensagem formatada
+    window.location.href = `https://wa.me/14998084490?text=${mensagemCodificada}`;
+};
+
+    
+        // Variável para controlar o estado da aba "Histórico de Compras"
+        let historicoAberto = false;
+    
+        // Função para mostrar ou esconder os itens no histórico de compras
+        const mostrarHistoricoDeCompras = () => {
+            const containerHistorico = document.getElementById('menuConta');
+            const historicoContainer = document.getElementById('historicoCompras');
+            const historicoCompras = JSON.parse(localStorage.getItem('historicoCompras')) || [];
+    
+            if (historicoAberto) {
+                historicoContainer.style.display = 'none';
+                historicoAberto = false;
+            } else {
+                historicoContainer.innerHTML = '';
+    
+                if (historicoCompras.length > 0) {
+                    historicoCompras.forEach(compra => {
+                        historicoContainer.innerHTML += `
+                            <div class="compra-box">
+                                <h3>Compra feita em: ${compra.data}</h3>
+                                <div class="itens-compra">
+                                    ${compra.itens.map(item => `
+                                        <div class="item-carrinho">
+                                            <img src="${item.img}" alt="${item.nome}" class="item-img">
+                                            <div class="item-info">
+                                                <p><strong>${item.nome}</strong></p>
+                                                <p>Quantidade: ${item.quantidade}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    historicoContainer.innerHTML = '<p>Você ainda não fez nenhuma compra.</p>';
+                }
+    
+                historicoContainer.style.display = 'block';
+                historicoAberto = true;
+            }
+        };
+    
+        document.getElementById('btnHistorico').addEventListener('click', mostrarHistoricoDeCompras);
+        document.getElementById('btnFinalizarCompra').addEventListener('click', finalizarCompra);
+    
+        const configurarCarrinho = () => {
+            if (localStorage.getItem('carrinho')) {
+                const carrinhoData = JSON.parse(localStorage.getItem('carrinho'));
+                carrinhoData.forEach(item => {
+                    const produto = items.find(i => i.id === item.id);
+                    if (produto) {
+                        produto.quantidade = item.quantidade;
+                    }
+                });
+            }
+            atualizarCarrinho();
+        };
+    
+        // Atualiza o carrinho no localStorage
+        const atualizarLocalStorage = () => {
+            const carrinhoData = items.filter(item => item.quantidade > 0);
+            localStorage.setItem('carrinho', JSON.stringify(carrinhoData));
+        };
+    
+        // Sempre que o carrinho é alterado, salvamos no localStorage
+        window.addEventListener('beforeunload', atualizarLocalStorage);
+    
+        // Inicializa a página
+        document.addEventListener('DOMContentLoaded', () => {
+    carrossel();
+    inicializarPetShop();
+    configurarCarrinho();
+
+    // Carrega e preenche o email e a senha, se existirem no localStorage
+    const savedEmail = localStorage.getItem('userEmail');
+    const savedSenha = localStorage.getItem('userSenha');
+
+    if (savedEmail && savedSenha) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('senha').value = savedSenha;
+    }
+});
+
+    
+        // Controla a exibição do carrinho
+        const toggleCarrinho = () => {
+            const carrinhoContainer = document.getElementById('carrinhoContainer');
+            carrinhoContainer.classList.toggle('open');
+        };
+    
+        const fecharCarrinho = () => {
+            const carrinhoContainer = document.getElementById('carrinhoContainer');
+            carrinhoContainer.classList.remove('open');
+        };
+    
+        // Alterando o botão para alternar a visibilidade do formulário
+document.getElementById('btnInfoConta').addEventListener('click', () => {
+    const formularioLogin = document.getElementById('formularioLogin');
+    const btnInfoConta = document.getElementById('btnInfoConta');
+
+    // Alternar a visibilidade do formulário de login
+    formularioLogin.style.display = formularioLogin.style.display === 'block' ? 'none' : 'block';
+
+    // Alternar a classe que dá o efeito de "clicado"
+    btnInfoConta.classList.toggle('ativo');
+});
+
+// Fechar o formulário de login quando o botão "Fechar" for clicado
+document.getElementById('btnFecharLogin').addEventListener('click', () => {
+    const formularioLogin = document.getElementById('formularioLogin');
+    const btnInfoConta = document.getElementById('btnInfoConta');
+
+    formularioLogin.style.display = 'none';  // Esconde o formulário de login
+    btnInfoConta.classList.remove('ativo');  // Remove a classe "ativo" do botão
+});
+
+document.getElementById('loginForm').addEventListener('submit', (event) => {
+    event.preventDefault(); // Evita o comportamento padrão de envio do formulário
+
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+
+    if (email && senha) {
+        // Salva as informações no localStorage
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userSenha', senha);
+
+        // Exibe uma mensagem de sucesso
+        alert('Login realizado com sucesso!');
+        
+        document.getElementById('formularioLogin').style.display = 'none'; // Fecha o formulário
+    } else {
+        alert('Por favor, preencha ambos os campos.');
+    }
+});
+
+        document.getElementById('btnCarrinho').addEventListener('click', toggleCarrinho);
+        document.getElementById('btnFecharCarrinho').addEventListener('click', fecharCarrinho);
+        document.getElementById('btnLogout').addEventListener('click', () => {
+    localStorage.removeItem('userEmail'); // Remove o email salvo
+    localStorage.removeItem('userSenha'); // Remove a senha salva
+    document.getElementById('email').value = ''; // Limpa o campo de email
+    document.getElementById('senha').value = ''; // Limpa o campo de senha
+});
+
+
+    </script>
+    
+</body>
+</html>
